@@ -225,8 +225,8 @@ def update_absorb():
     elif XPlvl10["actief"] == True:
         absorb["reductie"] = 0.5
 
-# lvl buff slime
-def update_orcHealth():
+# lvl buff slime health
+def update_slimeHealth():
     global slimeMaxHealth
     if XPlvl1["actief"] == True:
         slimeMaxHealth = 35
