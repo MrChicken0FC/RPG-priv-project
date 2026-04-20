@@ -7,12 +7,20 @@ import time
 selfHealth = {"level": "1", "Health": 100} # je krijgt meer health als je meer stats points in deze stat zet
 selfAttack = {"level": "1", "bonusAttack": 0} # je krijgt meer attack bonus (meer damage) als je meer stats points in deze stat zet
 selfLuck = {"level": "1", "dodgeChance": 0.0, "critChance": 0.05} # de user krijgt meer dodge kans en crit kans al deze stat wordt verhoogd
+
 # punten voor de user
-statPoints = 0 
+healthPoints = 25
+attackPoints = 5
+luckPoints = 0.05
+
+statPoints = 100
+
 # Attacks (user)
 slash = {"naam": "Slash", "schade": 25}
+
 # xp van de user
 userXP = 0
+
 # user progress levels
 XPlvl1  = {"level": 1,   "XPneeded": 250,   "actief": True} # level 1 is actief doordat je begint met level 1
 XPlvl2  = {"level": 2,   "XPneeded": 500,   "actief": False}
@@ -25,6 +33,52 @@ XPlvl8  = {"level": 8,   "XPneeded": 7500,  "actief": False}
 XPlvl9  = {"level": 9,   "XPneeded": 10000, "actief": False}
 XPlvl10 = {"level": 10,  "XPneeded": 0,     "actief": False} # max level nu tijdelijk
 
+def stat_points():
+    global statPoints, selfHealth, selfAttack, selfLuck
+    print(f"you have StatPoints({statPoints})")
+    print(f"What stat do you want to put youre points in: Health({selfHealth['Health']}) = LVL({selfHealth['level']}), Attack({selfAttack['bonusAttack']}) = LVL({selfAttack['level']}), Luck({selfLuck['critChance']}) = LVL({selfLuck['level']})")
+    
+    while True: # fix een bug als je 0 invoerd dat hij nogsteeds zegt dat hij iets geupgrade heeft
+        statInput = input("")
+
+        if statInput == "Health":
+            statChoice = int(input("how much points do you want to put in?")) 
+            
+            if statChoice > statPoints:
+                print("You dont have enough stat points")
+                continue
+            else:
+                statPoints -= statChoice
+                selfHealth["Health"] += healthPoints * statChoice
+                print(f"You have upgraded youre {statInput}")
+                break
+
+        elif statInput == "Attack":
+            statChoice = int(input("how much points do you want to put in?"))
+            if statChoice > statPoints:
+                print("You dont have enough stat points")
+                continue
+            else:
+                statPoints -= statChoice
+                selfAttack["bonusAttack"] += attackPoints * statChoice
+                print(f"You have upgraded youre {statInput}")
+                break
+
+        elif statInput == "Luck":
+            statChoice = int(input("how much points do you want to put in?"))
+            if statChoice > statPoints:
+                print("You dont have enough stat points")
+                continue
+            else:
+                statPoints -= statChoice
+                selfLuck["dodgeChance"] += luckPoints * statChoice
+                selfLuck["critChance"] += luckPoints * statChoice
+                print(f"You have upgraded youre {statInput}")
+                break
+
+        else:
+            print("There was a error try agian")
+            continue
 #User------------------------------------------------------------
 
 
@@ -355,11 +409,6 @@ def vraag_aanval(attack):
     keuze = input(f"Which attack do you wanna use? {attack['naam']} ({attack['schade']}): ")
     return keuze.lower()
 
-# keuze menu
-def vraag_menu():
-    keuzeMenu = input("Where do you wanna go? W (Front), A (Left), S (Back), D (Right), Menu, Profile (stats), Items: ")
-    return keuzeMenu.lower()
-
 # Profile menu
 def profile_menu():
     profileMenu = input("") # dit moetnog toegevoegt worden en alles moet logic zijn 
@@ -406,68 +455,115 @@ slimeBattle = False
 #GameLogic--------------------------------------------------------
 # slime battle
 def slime_battle():
-    if slimeBattle == True:
-        global slimeMaxHealth, slimeHealth, slime_absorb_actief, selfHealth, userXP
-        print("A slime appeared!")
-        slimeHealth = slimeMaxHealth  # reset de hp van de slime
-        slime_absorb_actief = False  # reset per gevecht
-        while True:
-            print(f"Slime Health({slimeHealth})")
-            # speler beurt
-            gekozen = vraag_aanval(slash)
-            check_quit(gekozen)
+    global slimeMaxHealth, slimeHealth, slime_absorb_actief, selfHealth, userXP
+    print("A slime appeared!")
+    slimeHealth = slimeMaxHealth  # reset de hp van de slime
+    slime_absorb_actief = False  # reset per gevecht
+    while True:
+        print(f"Slime Health({slimeHealth})")
+        # speler beurt
+        gekozen = vraag_aanval(slash)
+        check_quit(gekozen)
 
-            if gekozen == "slash":
-                kans = random_number()
+        if gekozen == "slash":
+            kans = random_number()
 
-                if slime_absorb_actief:
-                    aangepaste_schade = absorb_schade(slash["schade"])  # -10%
-                    slime_absorb_actief = False
-                else:
-                    aangepaste_schade = slash["schade"]  # normaal 25
+            if slime_absorb_actief:
+                aangepaste_schade = absorb_schade(slash["schade"])  # -10%
+                slime_absorb_actief = False
+            else:
+                aangepaste_schade = slash["schade"]  # normaal 25
 
-                if kans <= 8:
-                    slimeHealth -= aangepaste_schade
-                    print(f"Slash hit! Slime HP: {slimeHealth}")
-                    time.sleep(1)
-
-                elif kans > 9:
-                    print("Your attack was dodged!")
-                    time.sleep(1)
-
-            # slime dood?
-            if slimeHealth <= 0:
-                userXP += slimeXp
-                print("You defeated the slime!")
-                check_level_up()
-                print(f"You gained {slimeXp}XP, you need {XP_needed()} to level up and you have statpoints({statPoints}) to use!")
-                break
-
-            # slime beurt
-            slimeAttackKans = random_number()
-
-            if slimeAttackKans <= 6:
-                attackKans = random_number()
-
-                if attackKans <= 6:
-                    selfHealth["Health"] -= spit["schade"]
-                    print(f"Slime used Spit! Your HP: {selfHealth['Health']}")
-                    time.sleep(1)
-
-                elif attackKans > 6:
-                    print("The slime missed!")
-                    time.sleep(1)
-
-            elif slimeAttackKans > 6:
-                slime_absorb_actief = True  # maakt de absorb actief voor 1 beurd/continue
-                print("Slime used Absorb! Your next attack does less damage.")
+            if kans <= 8:
+                slimeHealth -= aangepaste_schade
+                print(f"Slash hit! Slime HP: {slimeHealth}")
                 time.sleep(1)
 
-            # speler dood?
-            if selfHealth["Health"] <= 0:
-                print("You were defeated...")
-                break
+            elif kans > 9:
+                print("Your attack was dodged!")
+                time.sleep(1)
+
+        # slime dood?
+        if slimeHealth <= 0:
+            userXP += slimeXp
+            print("You defeated the slime!")
+            check_level_up()
+            print(f"You gained {slimeXp}XP, you need {XP_needed()} to level up and you have statpoints({statPoints}) to use!")
+            break
+
+        # slime beurt
+        slimeAttackKans = random_number()
+
+        if slimeAttackKans <= 6:
+            attackKans = random_number()
+
+            if attackKans <= 6:
+                selfHealth["Health"] -= spit["schade"]
+                print(f"Slime used Spit! Your HP: {selfHealth['Health']}")
+                time.sleep(1)
+
+            elif attackKans > 6:
+                print("The slime missed!")
+                time.sleep(1)
+
+        elif slimeAttackKans > 6:
+            slime_absorb_actief = True  # maakt de absorb actief voor 1 beurd/continue
+            print("Slime used Absorb! Your next attack does less damage.")
+            time.sleep(1)
+
+        # speler dood?
+        if selfHealth["Health"] <= 0:
+            print("You were defeated...")
+            break
+
 #orc battle
+
+# keuze menu
+def vraag_menu():
+    global encounter
+    keuzeMenu = input("Where do you wanna go? W (Front), A (Left), S (Back), D (Right), Menu, Profile (stats), Items: ").lower()  # meteen lowercase
+
+    if keuzeMenu == "w":
+        print("You walked forwards")
+        encounter = random_monster()
+        if encounter <= 40:
+            slime_battle()
+        else:
+            print("Nothing happened...")
+            time.sleep(1)
+
+    elif keuzeMenu == "a":
+        print("You walked to the left")
+        encounter = random_monster()
+        if encounter <= 40:
+            slime_battle()
+        else:
+            print("Nothing happened...")
+            time.sleep(1)
+
+    elif keuzeMenu == "s":
+        print("You walked backwards")
+        encounter = random_monster()
+        if encounter <= 40:
+            slime_battle()
+        else:
+            print("Nothing happened...")
+            time.sleep(1)
+
+    elif keuzeMenu == "d":
+        print("You walked to the right")
+        encounter = random_monster()
+        if encounter <= 40:
+            slime_battle()
+        else:
+            print("Nothing happened...")
+            time.sleep(1)
+
+    elif keuzeMenu == "menu":
+        print("kaas") # maak nog een visuel menu van je dingen die je kan eqiupen ect armor en meer
+
+    elif keuzeMenu == "profile":
+        stat_points()
 
 #GameLogic--------------------------------------------------------
 
@@ -484,16 +580,6 @@ def check_quit(keuze):
 
 #Game------------------------------------------------------------
 while True:
-    print("Searching for enemy...")
-    time.sleep(1)
-    encounter = random_monster()
-
-    if encounter <= 40:
-        slimeBattle = True
-        slime_battle()
-        slimeBattle = False
-    elif encounter > 60:
-        print("Nothing found...")
-        time.sleep(1)
-        continue
+    vraag_menu()
+    continue
 #Game------------------------------------------------------------
